@@ -21,6 +21,14 @@ public class RestaurantDto {
     private String openingTime;
     private String closingTime;
     private String ownerUid;
+    private String image;
+     private String type;
+    private String rank;
+    private String adress;
+    private String websiteUrl;
+    private String days;
+
     private UserResponseRecord owner;
-    
+
+
 }

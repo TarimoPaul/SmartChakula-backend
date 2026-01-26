@@ -10,6 +10,12 @@ type Restaurant {
   closingTime: String
   ownerUid: ID!
   owner: User
+    image: String
+  type: String
+  rank: String
+  adress: String
+  websiteUrl: String
+  days: String
 }
 
 input RestaurantInput {
@@ -22,7 +28,33 @@ input RestaurantInput {
   openingTime: String
   closingTime: String
   ownerUid: ID!
+    image: String
+  type: String
+  rank: String
+  adress: String
+  websiteUrl: String
+  days: String
 }
+
+type RestaurantDto {
+  uid: ID!
+  name: String!
+  description: String
+  phoneNumber: String
+  region: String
+  city: String
+  isOpen: String
+  openingTime: String
+  closingTime: String
+  ownerUid: ID!
+  image: String
+  type: String
+  rank: String
+  adress: String
+  websiteUrl: String
+  days: String
+}
+
 
 type RestaurantResponse {
   status: ResponseStatus!
@@ -50,4 +82,11 @@ extend type Mutation {
   
   "Soft delete a restaurant by UID"
   deleteRestaurant(uid: ID!): Response!
+
+    "Update a Restaurant"
+    updateRestaurant(input: RestaurantInput!): RestaurantDto!
+
 }
+
+
+
