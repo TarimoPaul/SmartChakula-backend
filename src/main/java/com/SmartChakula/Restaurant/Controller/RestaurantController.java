@@ -39,6 +39,11 @@ public class RestaurantController {
     }
 
     @MutationMapping
+    public Response<RestaurantDto> updateRestaurant(@Argument RestaurantDto input) {
+        return restaurantService.updateRestaurant(input);
+    }
+
+    @MutationMapping
     public Response<String> deleteRestaurant(@Argument String uid) {
         return restaurantService.deleteRestaurant(uid);
     }

@@ -34,6 +34,16 @@ public class RestaurantEntity extends BaseEntity {
     private Boolean isOpen;
     private String openingTime;
     private String closingTime;
+    private String image;
+
+    private String type;
+    private String rank;
+    private String adress;
+    private String websiteUrl;
+    private String days;
+
+
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
