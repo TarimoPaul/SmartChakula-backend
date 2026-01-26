@@ -1,0 +1,17 @@
+enum UserRole {
+    ADMIN
+    USER
+    MANAGER
+    
+}
+
+
+type User {
+    uid: ID!
+    fullName: String!
+    email: String!
+    phone: String
+    role: UserRole! 
+    isActive: Boolean!
+    createdAt: String!
+}
