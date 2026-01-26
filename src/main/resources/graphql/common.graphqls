@@ -1,0 +1,11 @@
+enum ResponseStatus {
+  Success
+  Warning
+  Error
+  Failure
+}
+
+type Response {
+  status: ResponseStatus!
+  message: String
+}
