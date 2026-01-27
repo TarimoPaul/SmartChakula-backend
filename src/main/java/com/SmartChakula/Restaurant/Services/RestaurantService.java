@@ -24,13 +24,17 @@ public class RestaurantService {
     private final UserRepo userRepo;
 
     public ResponseList<RestaurantDto> getAllRestaurants() {
-        List<RestaurantEntity> restaurants = restaurantRepo.findByIsActive();
+        try {
+            List<RestaurantEntity> restaurants = restaurantRepo.findByIsActive();
 
-        List<RestaurantDto> dtoList = restaurants.stream()
-                .map(this::mapToResponse)
-                .toList();
+            List<RestaurantDto> dtoList = restaurants.stream()
+                    .map(this::mapToResponse)
+                    .toList();
 
-        return ResponseList.success(dtoList, "Restaurants fetched successfully");
+            return ResponseList.success(dtoList, "Restaurants fetched successfully");
+        } catch (Exception ex) {
+            return ResponseList.error(ex.getMessage() != null ? ex.getMessage() : "Failed to fetch restaurants");
+        }
     }
 
     // Get one restaurant by UID
@@ -104,7 +108,7 @@ public class RestaurantService {
             restaurant.setType(input.getType());
         if (input.getRank() != null)
             restaurant.setRank(input.getRank());
-        if (input.getAdress() != null)  
+        if (input.getAdress() != null)
             restaurant.setAdress(input.getAdress());
         if (input.getWebsiteUrl() != null)
             restaurant.setWebsiteUrl(input.getWebsiteUrl());
