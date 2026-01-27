@@ -3,6 +3,7 @@ package com.SmartChakula.Restaurant.Entity;
 import com.SmartChakula.Uaa.User.Entity.UserEntity;
 import com.SmartChakula.Utils.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +35,7 @@ public class RestaurantEntity extends BaseEntity {
     private Boolean isOpen;
     private String openingTime;
     private String closingTime;
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     private String type;
@@ -45,7 +47,7 @@ public class RestaurantEntity extends BaseEntity {
 
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     private UserEntity owner;
 
