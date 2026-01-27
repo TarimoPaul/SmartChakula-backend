@@ -1,0 +1,47 @@
+"""
+Category represents a group of menu items inside a restaurant
+Example: Drinks, Main Dishes, Desserts
+"""
+type Category{
+    uid: ID!
+    name: String!
+    description: String
+    restaurantUid: ID!
+    restaurant: Restaurant
+    isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
+}
+
+
+"""
+Input used when creating or updating a category
+"""
+input CategoryInput {
+    uid: ID
+    name: String!
+    description: String
+    restaurantUid: ID!
+}
+
+
+
+extend type Query {
+    "Fetch categories by restaurant UID"
+    getcategoriesByRestaurant(restaurantUid: ID!): [Category]!
+
+    "Fetch a single category by its UID"
+    getCategoryByUid(uid: ID!): Category
+}
+
+
+extend type Mutation {
+    "Create a new category"
+    saveCategory(input: CategoryInput!): Category!
+
+    "Update an existing category"
+    updateCategory(input: CategoryInput!): Category!
+
+    "Delete a category by its UID"
+    deleteCategory(uid: ID!): Response!
+}

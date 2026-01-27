@@ -1,0 +1,68 @@
+"""
+MenuItem represents a single food or drink item
+"""
+type MenuItem {
+  uid: ID!
+  name: String!
+  description: String
+  price: Float!
+  image: String
+  available: Boolean!
+  categoryUid: ID!
+  restaurantUid: ID!
+  createdAt: String
+  updatedAt: String
+}
+
+
+"""
+Input for creating or updating menu items
+"""
+input MenuItemInput {
+  uid: ID
+  name: String!
+  description: String
+  price: Float!
+  image: String
+  available: Boolean
+  categoryUid: ID!
+  restaurantUid: ID!
+}
+
+
+extend type Query {
+
+  """
+  Fetch menu items by category
+  """
+  getMenuItemsByCategory(categoryUid: ID!): [MenuItem!]!
+
+  """
+  Fetch menu items by restaurant
+  """
+  
+  getMenuItemsByRestaurant(restaurantUid: ID!): [MenuItem!]!
+
+  """
+  Fetch single menu item
+  """
+  getMenuItem(uid: ID!): MenuItem
+}
+
+extend type Mutation {
+
+  """
+  Create menu item
+  """
+  saveMenuItem(input: MenuItemInput!): MenuItem!
+
+  """
+  Update menu item
+  """
+  updateMenuItem(input: MenuItemInput!): MenuItem!
+
+  """
+  Soft delete menu item
+  """
+  deleteMenuItem(uid: ID!): Boolean!
+}

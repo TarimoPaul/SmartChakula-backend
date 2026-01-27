@@ -52,15 +52,15 @@ type RestaurantListResponse {
 
 extend type Query {
   "Fetch all active restaurants"
-  getRestaurants: RestaurantListResponse!
+  restaurants: RestaurantListResponse!
   
   "Fetch a single restaurant by its UID"
-  getRestaurantByUid(uid: ID!): RestaurantResponse!
+  restaurantByUid(uid: ID!): RestaurantResponse!
 }
 
 extend type Mutation {
   "Create a new restaurant"
-  saveRestaurant(input: RestaurantInput!): RestaurantResponse!
+  createRestaurant(input: RestaurantInput!): RestaurantResponse!
   
   "Soft delete a restaurant by UID"
   deleteRestaurant(uid: ID!): Response!
