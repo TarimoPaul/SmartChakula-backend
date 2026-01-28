@@ -8,11 +8,12 @@ type MenuItem {
   price: Float!
   image: String
   available: Boolean!
-  categoryUid: ID!
-  restaurantUid: ID!
+  category: Category
+  restaurant: Restaurant
   createdAt: String
   updatedAt: String
 }
+
 
 
 """

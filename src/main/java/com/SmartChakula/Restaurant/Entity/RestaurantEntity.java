@@ -35,6 +35,7 @@ public class RestaurantEntity extends BaseEntity {
     private Boolean isOpen;
     private String openingTime;
     private String closingTime;
+    
     @Column(columnDefinition = "TEXT")
     private String image;
 
@@ -43,8 +44,6 @@ public class RestaurantEntity extends BaseEntity {
     private String adress;
     private String websiteUrl;
     private String days;
-
-
 
 
     @ManyToOne(fetch = FetchType.EAGER)

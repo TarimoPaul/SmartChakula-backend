@@ -16,6 +16,7 @@ public interface RestaurantRepo extends JpaRepository<RestaurantEntity, Long> {
     @Query("SELECT r FROM RestaurantEntity r JOIN FETCH r.owner WHERE r.uid = :uid")
     Optional<RestaurantEntity> findByUid(@Param("uid") String uid);
 
+    
     @Query("SELECT r FROM RestaurantEntity r JOIN FETCH r.owner WHERE r.isActive = true AND r.isDeleted = false")
     List<RestaurantEntity> findByIsActive();
 
