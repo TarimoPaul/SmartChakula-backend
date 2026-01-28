@@ -1,8 +1,22 @@
 package com.SmartChakula.Uaa.User.Dtos;
 
-public record LoginInput(
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-        String identifier,
-        String password ) {
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginInput {
+        private String identifier;
+        private String password;
 
+        // Explicit getters for GraphQL mapping
+        public String getIdentifier() {
+                return identifier;
+        }
+
+        public String getPassword() {
+                return password;
+        }
 }

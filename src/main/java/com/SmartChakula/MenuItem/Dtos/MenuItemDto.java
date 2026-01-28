@@ -14,9 +14,9 @@ public class MenuItemDto {
     private String description;
     private Double price;
     private String image;
-    private Boolean isAvailable;
+    private Boolean available;
     private String categoryUid;
     private String restaurantUid;
-    private String isActive;
+    private Boolean active;
 
 }

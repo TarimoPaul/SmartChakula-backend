@@ -1,10 +1,5 @@
-# ============================================================================
-# MENU ITEM ENTITY - Individual food/drink items on a restaurant's menu
-# ============================================================================
-
 """
-MenuItem represents a single purchasable item like 'Chicken Burger' or 'Coca Cola'.
-Menu items belong to both a category and a restaurant for proper organization.
+Represents a single food or drink item in a restaurant menu
 """
 type MenuItem {
   uid: ID!
@@ -13,51 +8,16 @@ type MenuItem {
   price: Float!
   image: String
   available: Boolean!
-  categoryUid: String!
-  category: Category  # References Category from category.graphqls
-  restaurantUid: String!
-  restaurant: Restaurant  # References Restaurant from restaurant.graphqls
+  categoryUid: ID!
+  restaurantUid: ID!
   createdAt: String
   updatedAt: String
 }
 
-# ============================================================================
-# MENU ITEM RESPONSE WRAPPERS
-# ============================================================================
-
 """
-MenuItemResponse wraps a single MenuItem with operation metadata.
+Input type for creating or updating a menu item
 """
-type MenuItemResponse {
-  status: ResponseStatus!
-  message: String!
-  data: MenuItem
-}
-
-"""
-MenuItemListResponse wraps a list of MenuItems with pagination metadata.
-Pagination is especially important for menu items since a busy restaurant
-might have hundreds of items across all categories.
-"""
-type MenuItemListResponse {
-  status: ResponseStatus!
-  message: String!
-  data: [MenuItem!]!
-  pageSize: Int!
-  totalPages: Int!
-  currentPage: Int!
-  totalItems: Int!
-}
-
-# ============================================================================
-# MENU ITEM INPUT TYPE
-# ============================================================================
-
-"""
-MenuItemInput for creating or updating menu items.
-Both categoryUid and restaurantUid are required to properly categorize the item.
-"""
-input MenuItemInput {
+input MenuItemDto {
   uid: ID
   name: String!
   description: String
@@ -68,56 +28,59 @@ input MenuItemInput {
   restaurantUid: ID!
 }
 
-# ============================================================================
-# MENU ITEM QUERIES
-# ============================================================================
+"""
+Response wrapper for a single MenuItem
+"""
+type MenuItemResponse {
+  status: String!
+  message: String
+  data: MenuItem
+}
+
+"""
+Response wrapper for a list of MenuItems
+"""
+type MenuItemListResponse {
+  status: String!
+  message: String
+  data: [MenuItem!]!
+}
 
 extend type Query {
   """
-  Fetch menu items for a specific category with pagination.
+  Fetch all menu items in the system
+  """
+  getAllMenuItems: MenuItemListResponse!
 
   """
-  getMenuItemsByCategory(categoryUid: ID!, page: Int, size: Int): MenuItemListResponse!
-  
+  Fetch all menu items in a given category
   """
-  Fetch all menu items for a specific restaurant with pagination.
-  
-  """
-  getMenuItemsByRestaurant(restaurantUid: ID!, page: Int, size: Int): MenuItemListResponse!
-  
-  """
-  Fetch all menu items across all restaurants with pagination.
+  getMenuItemsByCategory(categoryUid: ID!): MenuItemListResponse!
 
   """
-  getMenuItems(page: Int, size: Int): MenuItemListResponse!
-  
+  Fetch all menu items for a specific restaurant
   """
-  Fetch a single menu item by its UID.
- 
+  getMenuItemsByRestaurant(restaurantUid: ID!): MenuItemListResponse!
+
   """
-  getMenuItemByUid(uid: ID!): MenuItemResponse!
+  Fetch a single menu item by its UID
+  """
+  getMenuItem(uid: ID!): MenuItemResponse!
 }
-
-# ============================================================================
-# MENU ITEM MUTATIONS
-# ============================================================================
 
 extend type Mutation {
   """
-  Create a new menu item.
-  
+  Create a new menu item
   """
-  saveMenuItem(input: MenuItemInput!): MenuItemResponse!
-  
-  """
-  Update an existing menu item.
-  
-  """
-  updateMenuItem(input: MenuItemInput!): MenuItemResponse!
-  
-  """
-  Soft delete a menu item.
+  saveMenuItem(input: MenuItemDto!): MenuItemResponse!
 
   """
-  deleteMenuItem(uid: ID!): DeleteResponse!
+  Update an existing menu item
+  """
+  updateMenuItem(uid: ID!, input: MenuItemDto!): MenuItemResponse!
+
+  """
+  Soft delete a menu item by its UID
+  """
+  deleteMenuItem(uid: ID!): MenuItemResponse!
 }

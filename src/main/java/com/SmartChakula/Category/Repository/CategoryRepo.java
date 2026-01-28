@@ -32,6 +32,12 @@ public interface CategoryRepo extends JpaRepository<CategoryEntity, Long> {
             """, nativeQuery = true)
     List<CategoryEntity> findByRestaurantUid(@Param("restaurantUid")String restaurantUid);
 
+    @Query(value = """
+            SELECT c.* FROM categories c
+            WHERE c.is_active = true AND c.is_deleted = false
+            ORDER BY c.created_at ASC
+            """, nativeQuery = true)
+    List<CategoryEntity> findAllActive();
 
 
     @Modifying

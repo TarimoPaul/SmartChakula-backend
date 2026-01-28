@@ -1,24 +1,26 @@
 package com.SmartChakula.Uaa.User.Dtos;
 
 import com.SmartChakula.Uaa.User.Entity.UserEntity;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public record AuthResponse(
-                String token,
-                UserResponseRecord user) {
-
-        public static AuthResponse from(UserEntity user, String token) {
-
-                return new AuthResponse(
-                                token,
-                                new UserResponseRecord(
-                                                user.getUid(), // ✅ Changed from getId() to getUid()
-                                                user.getFullName(),
-                                                user.getEmail(),
-                                                user.getPhone(),
-                                                user.getRole().name(),
-                                                user.getIsActive(),
-                                                user.getCreatedAt().toString()));
-
-        }
-
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+    private String status;
+    private String message;
+    private String token;
+    private UserDto user;
+    
+    // Helper method to create from UserEntity
+    public static AuthResponse from(UserEntity userEntity, String token) {
+        AuthResponse response = new AuthResponse();
+        response.setStatus("Success");
+        response.setMessage("Authentication successful");
+        response.setToken(token);
+        response.setUser(UserDto.from(userEntity));
+        return response;
+    }
 }

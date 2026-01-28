@@ -12,7 +12,7 @@ public class CategoryDto {
     private String name;
     private String description;
     private String restaurantUid;
-    private String isActive;
+    private Boolean isActive;
     private String uid;
 
 }

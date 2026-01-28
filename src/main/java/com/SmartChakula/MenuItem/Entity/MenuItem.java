@@ -33,21 +33,23 @@ public class MenuItem extends BaseEntity {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Double price;
 
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     @Column(name =  "is_available", nullable = false)
-    private boolean isAvailable = true;
+    private boolean available = true;
 
-    @ManyToOne(fetch =  FetchType.LAZY)
+    @ManyToOne(fetch =  FetchType.EAGER)
     @JoinColumn(name = "category_id", nullable = false)
     private CategoryEntity category;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "restaurant_id", nullable = false)
     private RestaurantEntity restaurant;
   

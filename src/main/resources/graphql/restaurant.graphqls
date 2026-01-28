@@ -1,146 +1,79 @@
 type Restaurant {
-
   uid: ID!
-
   name: String!
-
   description: String
-
   phoneNumber: String
-
   region: String
-
   city: String
-
   isOpen: String
-
   openingTime: String
-
   closingTime: String
-
   ownerUid: ID!
-
   owner: User
-
   image: String
-
   type: String
-
   rank: String
-
   adress: String
-
   websiteUrl: String
-
   days: String
-
 }
-
-
 
 input RestaurantInput {
-
   uid: ID
-
   name: String!
-
   description: String
-
   phoneNumber: String
-
   region: String
-
   city: String
-
   isOpen: String
-
   openingTime: String
-
   closingTime: String
-
   ownerUid: ID!
-
   image: String
-
   type: String
-
   rank: String
-
   adress: String
-
   websiteUrl: String
-
   days: String
-
 }
-
-
 
 type RestaurantResponse {
-
-  status: ResponseStatus!
-
+  status: String!
   message: String
-
   data: Restaurant
-
 }
-
-
 
 type RestaurantListResponse {
-
-  status: ResponseStatus!
-
+  status: String!
   message: String
-
   data: [Restaurant!]!
-
 }
-
-
 
 extend type Query {
-
-  "Fetch all active restaurants"
-
-  restaurants: RestaurantListResponse!
-
+  """
+  Fetch all active restaurants
+  """
+  getAllRestaurants: RestaurantListResponse!
   
-
-  "Fetch a single restaurant by its UID"
-
+  """
+  Fetch a single restaurant by its UID
+  """
   restaurantByUid(uid: ID!): RestaurantResponse!
-
 }
-
-
 
 extend type Mutation {
-
-  "Create a new restaurant"
-
+  """
+  Create a new restaurant
+  """
   createRestaurant(input: RestaurantInput!): RestaurantResponse!
-
   
-
-  "Soft delete a restaurant by UID"
-
-  deleteRestaurant(uid: ID!): Response!
-
-
-
-    "Update a Restaurant"
-
-    updateRestaurant(input: RestaurantInput!): RestaurantResponse!
-
-
-
+  """
+  Update an existing restaurant
+  """
+  updateRestaurant(input: RestaurantInput!): RestaurantResponse!
+  
+  """
+  Delete a restaurant by UID
+  """
+  deleteRestaurant(uid: ID!): RestaurantResponse!
 }
-
-
-
-
-
-
-

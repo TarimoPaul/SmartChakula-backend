@@ -1,13 +1,53 @@
+"""
+User DTO for responses
+"""
+type UserDto {
+  uid: ID!
+  fullName: String!
+  email: String!
+  phone: String
+  role: UserRole!
+  isActive: Boolean!
+  createdAt: String
+}
+
+"""
+Response for authentication operations
+"""
+type AuthResponse {
+  status: String!
+  message: String
+  token: String
+  user: UserDto
+}
+
+"""
+Input for user login
+"""
 input LoginInput {
   identifier: String!
   password: String!
 }
 
-type AuthResponse {
-  token: String!
-  user: User!
+"""
+Input for user registration
+"""
+input RegisterInput {
+  fullName: String!
+  email: String!
+  password: String!
+  phone: String
+  role: UserRole!
 }
 
 extend type Mutation {
+  """
+  User login
+  """
   login(input: LoginInput!): AuthResponse!
+  
+  """
+  User registration
+  """
+  register(input: RegisterInput!): AuthResponse!
 }

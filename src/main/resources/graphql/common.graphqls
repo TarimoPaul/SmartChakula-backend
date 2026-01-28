@@ -1,19 +1,5 @@
-# ============================================================================
-# COMMON TYPES - Shared across all entities in SmartChakula
-# ============================================================================
 
-"""
-Custom scalar for date and time values.
-Allows ISO 8601 formatted datetime strings like '2024-01-28T10:30:00Z'.
-This is used for createdAt and updatedAt fields across all entities.
-"""
-scalar DateTime
 
-"""
-ResponseStatus enum matching your Java ResponseStatus enum.
-Every response wrapper uses this to indicate operation outcome.
-The values MUST match your Java enum exactly: Success, Warning, Error, Failure.
-"""
 enum ResponseStatus {
   Success
   Warning
@@ -21,67 +7,24 @@ enum ResponseStatus {
   Failure
 }
 
-"""
-Base structure that all single-item response types follow.
-While GraphQL doesn't enforce this as strictly as an interface would in Java,
-documenting this pattern here helps developers understand the consistency
-across all entity response types.
 
-Every XxxResponse type in the system will have:
-- status: ResponseStatus!
-- message: String!
-- data: Xxx (the actual entity, nullable in case of not found)
-"""
-type _SingleResponsePattern {
-  """This is just documentation - actual response types implement this pattern"""
-  _note: String
-}
+# =========================
+# COMMON RESPONSE WRAPPERS
+# =========================
 
-"""
-Base structure that all list response types follow.
-This documents the pagination pattern used across all entities.
-
-Every XxxListResponse type in the system will have:
-- status: ResponseStatus!
-- message: String!
-- data: [Xxx!]! (list of entities)
-- pageSize: Int! (items per page)
-- totalPages: Int! (total number of pages)
-- currentPage: Int! (current page number, 1-based)
-- totalItems: Int! (total count across all pages)
-"""
-type _ListResponsePattern {
-  """This is just documentation - actual response types implement this pattern"""
-  _note: String
-}
-
-"""
-DeleteResponse is truly shared across all entities.
-Since deletion operations don't return entity-specific data,
-one type serves all delete mutations: deleteRestaurant, deleteCategory, etc.
-
-The data field is usually null but can optionally contain the UID
-of the deleted item or other confirmation details.
-"""
-type DeleteResponse {
+type Response {
   status: ResponseStatus!
-  message: String!
-  data: String
+  message: String
+}
+
+type PageInfo {
+  pageSize: Int
+  totalPages: Int
+  currentPage: Int
+  totalItems: Int
 }
 
 
-"""
-The root Query type. Individual entity files will extend this
-with their specific query operations using 'extend type Query'.
-"""
-type Query {
-  _empty: String
-}
 
-"""
-The root Mutation type. Individual entity files will extend this
-with their specific mutation operations using 'extend type Mutation'.
-"""
-type Mutation {
-  _empty: String
-}
+
+

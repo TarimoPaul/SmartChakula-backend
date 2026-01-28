@@ -40,7 +40,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html"
+                               
+                                )
                         .permitAll()
 
                         // 🔐 nyingine zote zitahitaji JWT (baadaye)
@@ -58,7 +60,8 @@ public class SecurityConfig {
         // Allow Angular/Vite dev servers which often run on random localhost ports
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                 "electron://*"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
