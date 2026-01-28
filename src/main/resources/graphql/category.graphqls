@@ -1,47 +1,106 @@
+# ============================================================================
+# CATEGORY ENTITY - Groups related menu items within a restaurant
+# ============================================================================
+
 """
-Category represents a group of menu items inside a restaurant
-Example: Drinks, Main Dishes, Desserts
+Category represents a grouping of menu items like 'Appetizers' or 'Desserts'.
+
 """
-type Category{
-    uid: ID!
-    name: String!
-    description: String
-    restaurantUid: ID!
-    restaurant: Restaurant
-    isActive: Boolean!
-    createdAt: String!
-    updatedAt: String!
+type Category {
+  uid: ID!
+  name: String!
+  description: String
+  image: String
+  restaurantUid: String!
+  restaurant: Restaurant  # References Restaurant from restaurant.graphqls
+  createdAt: String
+  updatedAt: String
 }
 
+# ============================================================================
+# CATEGORY RESPONSE WRAPPERS
+# ============================================================================
 
 """
-Input used when creating or updating a category
+CategoryResponse wraps a single Category with operation metadata.
+
+"""
+type CategoryResponse {
+  status: ResponseStatus!
+  message: String!
+  data: Category
+}
+
+"""
+CategoryListResponse wraps a list of Categories with pagination metadata.
+
+"""
+type CategoryListResponse {
+  status: ResponseStatus!
+  message: String!
+  data: [Category!]!
+  pageSize: Int!
+  totalPages: Int!
+  currentPage: Int!
+  totalItems: Int!
+}
+
+# ============================================================================
+# CATEGORY INPUT TYPE
+# ============================================================================
+
+"""
+CategoryInput for creating or updating categories.
+RestaurantUid is required because every category belongs to a restaurant.
 """
 input CategoryInput {
-    uid: ID
-    name: String!
-    description: String
-    restaurantUid: ID!
+  uid: ID
+  name: String!
+  description: String
+  image: String
+  restaurantUid: ID!
 }
 
-
+# ============================================================================
+# CATEGORY QUERIES
+# ============================================================================
 
 extend type Query {
-    "Fetch categories by restaurant UID"
-    getcategoriesByRestaurant(restaurantUid: ID!): [Category]!
-
-    "Fetch a single category by its UID"
-    getCategoryByUid(uid: ID!): Category
+  """
+  Fetch all categories for a specific restaurant with pagination.
+ 
+  """
+  getCategoriesByRestaurant(restaurantUid: ID!, page: Int, size: Int): CategoryListResponse!
+  
+  """
+  Fetch all categories across all restaurants with pagination.
+ 
+  """
+  getCategories(page: Int, size: Int): CategoryListResponse!
+  
+  """
+  Fetch a single category by its UID.
+  """
+  getCategoryByUid(uid: ID!): CategoryResponse!
 }
 
+# ============================================================================
+# CATEGORY MUTATIONS
+# ============================================================================
 
 extend type Mutation {
-    "Create a new category"
-    saveCategory(input: CategoryInput!): Category!
-
-    "Update an existing category"
-    updateCategory(input: CategoryInput!): Category!
-
-    "Delete a category by its UID"
-    deleteCategory(uid: ID!): Response!
+  """
+  Create a new category within a restaurant.
+  """
+  saveCategory(input: CategoryInput!): CategoryResponse!
+  
+  """
+  Update an existing category.
+  """
+  updateCategory(input: CategoryInput!): CategoryResponse!
+  
+  """
+  Soft delete a category.
+  """
+  deleteCategory(uid: ID!): DeleteResponse!
 }

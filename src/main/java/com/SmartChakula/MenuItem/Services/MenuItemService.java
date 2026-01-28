@@ -16,105 +16,123 @@ import com.SmartChakula.Utils.ResponseList;
 import com.SmartChakula.Utils.ResponseStatus;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MenuItemService {
 
     private final MenuItemRepo menuItemRepo;
     private final CategoryRepo categoryRepo;
     private final RestaurantRepo restaurantRepo;
 
-    public ResponseList<MenuItemDto> getMenuItemsByCategory(String categoryUid) {
-
-        List<MenuItem> items = menuItemRepo.findByCategoryUid(categoryUid);
-
-        List<MenuItemDto> dtoList = items.stream()
-                .map(this::mapToDto)
-                .toList();
-
-        return ResponseList.success(dtoList, "Menu items fetched successfully");
-    }
-
-    public ResponseList<MenuItemDto> getMenuItemsByRestaurant(String restaurantUid) {
-
-        List<MenuItem> menuItems = menuItemRepo.findByRestaurantUid(restaurantUid);
-
-        List<MenuItemDto> menuItemDtos = menuItems.stream()
-                .map(this::mapToDto)
-                .toList();
-
-        return ResponseList.success(menuItemDtos, "Menu items fetched successfully");
-    }
-
-    public ResponseList<MenuItemDto> getAllMenuItems() {
-
-        List<MenuItem> menuItems = menuItemRepo.findAllActive();
-
-        List<MenuItemDto> menuItemDtos = menuItems.stream()
-                .map(this::mapToDto)
-                .toList();
-
-        return ResponseList.success(menuItemDtos, "Menu items fetched successfully");
-    }
-
-    public ResponseList<MenuItemDto> saveMenuItems(MenuItemDto input) {
-
-        CategoryEntity category = categoryRepo.findByUid(input.getCategoryUid())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        RestaurantEntity restaurant = restaurantRepo.findByUid(input.getRestaurantUid())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
-
-        String uid = java.util.UUID.randomUUID().toString();
-
-        menuItemRepo.insertMenuItem(
-                uid,
-                input.getName(),
-                input.getDescription(),
-                input.getPrice(),
-                input.getImage(),
-                input.getIsAvailable() != null ? input.getIsAvailable() : true,
-                category.getId(), // FAST JOIN
-                restaurant.getId() // FAST JOIN
-        );
-
-        MenuItem savedMenuItem = menuItemRepo.findByUid(uid)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
-
-        return new ResponseList<>(ResponseStatus.Success, List.of(mapToDto(savedMenuItem)),
-                "Menu items saved successfully");
-
-    }
-
-    public Response<MenuItemDto> updateMenuItem(String uid, MenuItemDto input) {
-
-        int update = menuItemRepo.updateMenuItem(
-                uid,
-                input.getName(),
-                input.getDescription(),
-                input.getPrice(),
-                input.getImage(),
-                input.getIsAvailable() != null ? input.getIsAvailable() : true);
-        if (update == 0) {
-            throw new RuntimeException("Menu item not found or no changes made");
+    public List<MenuItemDto> getMenuItemsByCategory(String categoryUid) {
+        log.debug("Fetching menu items for category: {}", categoryUid);
+        
+        ResponseList<MenuItemDto> response = getMenuItemsByCategory(categoryUid);
+        
+        if (response.getStatus() != ResponseStatus.Success) {
+            throw new RuntimeException("Failed to fetch menu items: " + response.getMessage());
         }
-
-        MenuItem updatedMenuItem = menuItemRepo.findByUid(uid)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
-
-        return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), "Menu item updated successfully");
+        
+        return response.getData();
     }
 
-    public Response<String> deleteMenuItem(String uid) {
-
-        int deleted = menuItemRepo.softDeleteMenuItem(uid);
-
-        if (deleted == 0) {
-            throw new RuntimeException("Menu item not found or already deleted");
+    /**
+     * GraphQL-friendly method to get menu items by restaurant.
+     */
+    public List<MenuItemDto> getMenuItemsByRestaurant(String restaurantUid) {
+        log.debug("Fetching menu items for restaurant: {}", restaurantUid);
+        
+        ResponseList<MenuItemDto> response = getMenuItemsByRestaurant(restaurantUid);
+        
+        if (response.getStatus() != ResponseStatus.Success) {
+            throw new RuntimeException("Failed to fetch menu items: " + response.getMessage());
         }
+        
+        return response.getData();
+    }
 
-        return new Response<>(ResponseStatus.Success, null, "Menu item deleted successfully");
+    /**
+     * GraphQL-friendly method to get all menu items.
+     */
+    public List<MenuItemDto> getAllMenuItemsDirect() {
+        log.debug("Fetching all menu items");
+        
+        ResponseList<MenuItemDto> response = getAllMenuItems();
+        
+        if (response.getStatus() != ResponseStatus.Success) {
+            throw new RuntimeException("Failed to fetch menu items: " + response.getMessage());
+        }
+        
+        return response.getData();
+    }
+
+  
+    public MenuItemDto saveMenuItem(MenuItemDto input) {
+        log.info("Saving menu item: {}", input.getName());
+        
+        // Call the existing wrapped method which contains all the business logic
+        ResponseList<MenuItemDto> response = saveMenuItems(input);
+        
+        // Unwrap and validate the response
+        if (response.getStatus() != ResponseStatus.Success) {
+            log.error("Failed to save menu item: {}", response.getMessage());
+            throw new RuntimeException("Failed to save menu item: " + response.getMessage());
+        }
+        
+        List<MenuItemDto> data = response.getData();
+        
+        if (data == null || data.isEmpty()) {
+            log.error("Service returned success but no data");
+            throw new RuntimeException("Failed to save menu item - no data returned");
+        }
+        
+        MenuItemDto savedItem = data.get(0);
+        log.info("Successfully saved menu item with UID: {}", savedItem.getUid());
+        
+        return savedItem;
+    }
+
+    /**
+     * GraphQL-friendly method to update a menu item.
+     */
+    public MenuItemDto updateMenuItem(String uid, MenuItemDto input) {
+        log.info("Updating menu item: {}", uid);
+        
+        Response<MenuItemDto> response = updateMenuItem(uid, input);
+        
+        if (response.getStatus() != ResponseStatus.Success) {
+            log.error("Failed to update menu item: {}", response.getMessage());
+            throw new RuntimeException("Failed to update menu item: " + response.getMessage());
+        }
+        
+        if (response.getData() == null) {
+            log.error("Update succeeded but no data returned");
+            throw new RuntimeException("Failed to update menu item - no data returned");
+        }
+        
+        log.info("Successfully updated menu item: {}", uid);
+        return response.getData();
+    }
+
+    /**
+     * GraphQL-friendly method to delete a menu item.
+     * Returns boolean instead of Response wrapper.
+     */
+    public Boolean deleteMenuItem(String uid) {
+        log.info("Deleting menu item: {}", uid);
+        
+        Response<String> response = deleteMenuItem(uid);
+        
+        if (response.getStatus() != ResponseStatus.Success) {
+            log.error("Failed to delete menu item: {}", response.getMessage());
+            throw new RuntimeException("Failed to delete menu item: " + response.getMessage());
+        }
+        
+        log.info("Successfully deleted menu item: {}", uid);
+        return true;
     }
 
     private MenuItemDto mapToDto(MenuItem entity) {
@@ -129,5 +147,5 @@ public class MenuItemService {
         dto.setRestaurantUid(entity.getRestaurant().getUid());
         return dto;
     }
-
 }
+

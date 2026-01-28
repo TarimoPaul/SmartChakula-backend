@@ -18,13 +18,11 @@ import lombok.RequiredArgsConstructor;
 public class MenuItemController {
 
     private final MenuItemService menuItemService;
-    
 
     @QueryMapping
     public ResponseList<MenuItemDto> getMenuItemsByCategory(@Argument String categoryUid) {
         return menuItemService.getMenuItemsByCategory(categoryUid);
     }
-
 
     @QueryMapping
     public ResponseList<MenuItemDto> getMenuItemsByRestaurant(@Argument String restaurantUid) {
@@ -36,12 +34,11 @@ public class MenuItemController {
         return menuItemService.getAllMenuItems();
     }
 
-
     @MutationMapping
-    public ResponseList<MenuItemDto> createMenuItem(@Argument MenuItemDto input) {
+    public ResponseList<MenuItemDto> saveMenuItem(@Argument MenuItemDto input) {
         return menuItemService.saveMenuItems(input);
     }
-    
+
     @MutationMapping
     public Response<MenuItemDto> updateMenuItem(@Argument String uid, @Argument MenuItemDto input) {
         return menuItemService.updateMenuItem(uid, input);
@@ -50,7 +47,7 @@ public class MenuItemController {
 
     @MutationMapping
     public Response<String> deleteMenuItem(@Argument String uid) {
-        return menuItemService.deleteMenuItem(uid); 
+        return menuItemService.deleteMenuItem(uid);
     }
 
 }

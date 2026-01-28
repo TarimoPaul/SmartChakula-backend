@@ -76,10 +76,6 @@ input RestaurantInput {
 
 
 
-
-
-
-
 type RestaurantResponse {
 
   status: ResponseStatus!
