@@ -36,6 +36,11 @@ public class MenuItemController {
         return menuItemService.getAllMenuItems();
     }
 
+    @QueryMapping
+    public Response<MenuItemDto> getMenuItem(@Argument String uid) {
+        return menuItemService.getMenuItem(uid);
+    }
+
 
     @MutationMapping
     public ResponseList<MenuItemDto> createMenuItem(@Argument MenuItemDto input) {

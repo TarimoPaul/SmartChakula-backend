@@ -47,6 +47,18 @@ public class MenuItemService {
         return ResponseList.success(menuItemDtos, "Menu items fetched successfully");
     }
 
+    public Response<MenuItemDto> getMenuItem(String uid) {
+
+        MenuItem menuItem = menuItemRepo.findByUid(uid)
+                .orElse(null);
+
+        if (menuItem == null) {
+            return new Response<>("Menu item not found", ResponseStatus.Error);
+        }
+
+        return new Response<>(ResponseStatus.Success, mapToDto(menuItem), "Menu item fetched successfully");
+    }
+
     public ResponseList<MenuItemDto> getAllMenuItems() {
 
         List<MenuItem> menuItems = menuItemRepo.findAllActive();
@@ -60,50 +72,112 @@ public class MenuItemService {
 
     public ResponseList<MenuItemDto> saveMenuItems(MenuItemDto input) {
 
-        CategoryEntity category = categoryRepo.findByUid(input.getCategoryUid())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+        try {
+            if (input == null) {
+                return ResponseList.error("Input is required");
+            }
+            if (input.getCategoryUid() == null || input.getCategoryUid().isBlank()) {
+                return ResponseList.error("categoryUid is required");
+            }
+            if (input.getRestaurantUid() == null || input.getRestaurantUid().isBlank()) {
+                return ResponseList.error("restaurantUid is required");
+            }
 
-        RestaurantEntity restaurant = restaurantRepo.findByUid(input.getRestaurantUid())
-                .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            CategoryEntity category = categoryRepo.findByUid(input.getCategoryUid())
+                    .orElse(null);
+            if (category == null) {
+                return ResponseList.error("Category not found");
+            }
 
-        String uid = java.util.UUID.randomUUID().toString();
+            RestaurantEntity restaurant = restaurantRepo.findByUid(input.getRestaurantUid())
+                    .orElse(null);
+            if (restaurant == null) {
+                return ResponseList.error("Restaurant not found");
+            }
 
-        menuItemRepo.insertMenuItem(
-                uid,
-                input.getName(),
-                input.getDescription(),
-                input.getPrice(),
-                input.getImage(),
-                input.getIsAvailable() != null ? input.getIsAvailable() : true,
-                category.getId(), // FAST JOIN
-                restaurant.getId() // FAST JOIN
-        );
+            String uid = java.util.UUID.randomUUID().toString();
 
-        MenuItem savedMenuItem = menuItemRepo.findByUid(uid)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
+            String description = input.getDescription();
+            String image = input.getImage();
+            String warning = "";
+            if (description != null && description.length() > 255) {
+                description = description.substring(0, 255);
+                warning = "Description was truncated to 255 characters.";
+            }
+            if (image != null && image.length() > 255) {
+                image = null;
+                warning = warning.isBlank() ? "Image was not saved because it is too large." : warning + " Image was not saved because it is too large.";
+            }
 
-        return new ResponseList<>(ResponseStatus.Success, List.of(mapToDto(savedMenuItem)),
-                "Menu items saved successfully");
+            menuItemRepo.insertMenuItem(
+                    uid,
+                    input.getName(),
+                    description,
+                    input.getPrice(),
+                    image,
+                    input.getIsAvailable() != null ? input.getIsAvailable() : true,
+                    category.getId(),
+                    restaurant.getId()
+            );
+
+            MenuItem savedMenuItem = menuItemRepo.findByUid(uid)
+                    .orElse(null);
+            if (savedMenuItem == null) {
+                return ResponseList.error("Menu item not found after insert");
+            }
+
+            String message = warning.isBlank() ? "Menu items saved successfully" : "Menu items saved successfully. " + warning;
+            return new ResponseList<>(ResponseStatus.Success, List.of(mapToDto(savedMenuItem)), message);
+        } catch (Exception e) {
+            return ResponseList.error(e.getMessage() != null ? e.getMessage() : "Failed to create menu item");
+        }
 
     }
 
     public Response<MenuItemDto> updateMenuItem(String uid, MenuItemDto input) {
 
-        int update = menuItemRepo.updateMenuItem(
-                uid,
-                input.getName(),
-                input.getDescription(),
-                input.getPrice(),
-                input.getImage(),
-                input.getIsAvailable() != null ? input.getIsAvailable() : true);
-        if (update == 0) {
-            throw new RuntimeException("Menu item not found or no changes made");
+        try {
+            if (uid == null || uid.isBlank()) {
+                return new Response<>("uid is required", ResponseStatus.Error);
+            }
+            if (input == null) {
+                return new Response<>("Input is required", ResponseStatus.Error);
+            }
+
+            String description = input.getDescription();
+            String image = input.getImage();
+            String warning = "";
+            if (description != null && description.length() > 255) {
+                description = description.substring(0, 255);
+                warning = "Description was truncated to 255 characters.";
+            }
+            if (image != null && image.length() > 255) {
+                image = null;
+                warning = warning.isBlank() ? "Image was not saved because it is too large." : warning + " Image was not saved because it is too large.";
+            }
+
+            int update = menuItemRepo.updateMenuItem(
+                    uid,
+                    input.getName(),
+                    description,
+                    input.getPrice(),
+                    image,
+                    input.getIsAvailable() != null ? input.getIsAvailable() : true);
+            if (update == 0) {
+                return new Response<>("Menu item not found or no changes made", ResponseStatus.Error);
+            }
+
+            MenuItem updatedMenuItem = menuItemRepo.findByUid(uid)
+                    .orElse(null);
+            if (updatedMenuItem == null) {
+                return new Response<>("Menu item not found", ResponseStatus.Error);
+            }
+
+            String message = warning.isBlank() ? "Menu item updated successfully" : "Menu item updated successfully. " + warning;
+            return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), message);
+        } catch (Exception e) {
+            return new Response<>(e.getMessage() != null ? e.getMessage() : "Failed to update menu item", ResponseStatus.Error);
         }
-
-        MenuItem updatedMenuItem = menuItemRepo.findByUid(uid)
-                .orElseThrow(() -> new RuntimeException("Menu item not found"));
-
-        return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), "Menu item updated successfully");
     }
 
     public Response<String> deleteMenuItem(String uid) {

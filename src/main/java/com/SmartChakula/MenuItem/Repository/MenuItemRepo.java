@@ -99,6 +99,12 @@ public interface MenuItemRepo  extends JpaRepository<MenuItem, Long> {
     );
 
 
+    @Query(value = """
+            SELECT * FROM menu_items
+            WHERE is_active = true
+            AND is_deleted = false
+            ORDER BY created_at ASC
+            """, nativeQuery = true)
     List<MenuItem> findAllActive();
 
 

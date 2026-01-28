@@ -13,7 +13,6 @@ type Category{
     updatedAt: String!
 }
 
-
 """
 Input used when creating or updating a category
 """
@@ -24,24 +23,26 @@ input CategoryInput {
     restaurantUid: ID!
 }
 
+type CategoryResponse {
+  status: ResponseStatus!
+  message: String
+  data: Category
+}
 
-
-extend type Query {
-    "Fetch categories by restaurant UID"
-    getcategoriesByRestaurant(restaurantUid: ID!): [Category]!
-
-    "Fetch a single category by its UID"
-    getCategoryByUid(uid: ID!): Category
+type CategoryListResponse {
+  status: ResponseStatus!
+  message: String
+  data: [Category!]!
 }
 
 
+extend type Query {
+    getCategoryService: CategoryListResponse!
+    getCategoryByUid(uid: ID!): CategoryResponse!
+}
+
 extend type Mutation {
-    "Create a new category"
-    saveCategory(input: CategoryInput!): Category!
-
-    "Update an existing category"
-    updateCategory(input: CategoryInput!): Category!
-
-    "Delete a category by its UID"
+    createCategory(input: CategoryInput!): CategoryResponse!
+    updateCategory(input: CategoryInput!): CategoryResponse!
     deleteCategory(uid: ID!): Response!
 }

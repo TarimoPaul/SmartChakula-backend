@@ -25,7 +25,9 @@ public class CategoryService {
 
 
     public ResponseList<CategoryDto> getCategoriesByRestaurants(String restaurantUid) {
-        List<CategoryEntity> categories = categoryRepo.findByRestaurantUid(restaurantUid);
+        List<CategoryEntity> categories = (restaurantUid == null || restaurantUid.isBlank())
+                ? categoryRepo.findAllActive()
+                : categoryRepo.findByRestaurantUid(restaurantUid);
 
         List<CategoryDto> dtoList = categories.stream()
                 .map(this::mapToResponse)
@@ -101,7 +103,7 @@ public class CategoryService {
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
         dto.setRestaurantUid(category.getRestaurant().getUid());
-        dto.setIsActive(category.getIsActive().toString());
+        dto.setIsActive(category.getIsActive());
         return dto;
     }
 }

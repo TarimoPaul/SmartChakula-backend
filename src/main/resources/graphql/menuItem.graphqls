@@ -1,17 +1,13 @@
-"""
-MenuItem represents a single food or drink item
-"""
+"""MenuItem represents a single food or drink item"""
 type MenuItem {
   uid: ID!
   name: String!
   description: String
   price: Float!
   image: String
-  available: Boolean!
-  category: Category
-  restaurant: Restaurant
-  createdAt: String
-  updatedAt: String
+  isAvailable: Boolean!
+  categoryUid: ID!
+  restaurantUid: ID!
 }
 
 
@@ -25,9 +21,21 @@ input MenuItemInput {
   description: String
   price: Float!
   image: String
-  available: Boolean
+  isAvailable: Boolean
   categoryUid: ID!
   restaurantUid: ID!
+}
+
+type MenuItemResponse {
+  status: ResponseStatus!
+  message: String
+  data: MenuItem
+}
+
+type MenuItemListResponse {
+  status: ResponseStatus!
+  message: String
+  data: [MenuItem!]!
 }
 
 
@@ -36,18 +44,20 @@ extend type Query {
   """
   Fetch menu items by category
   """
-  getMenuItemsByCategory(categoryUid: ID!): [MenuItem!]!
+  getMenuItemsByCategory(categoryUid: ID!): MenuItemListResponse!
 
   """
   Fetch menu items by restaurant
   """
   
-  getMenuItemsByRestaurant(restaurantUid: ID!): [MenuItem!]!
+  getMenuItemsByRestaurant(restaurantUid: ID!): MenuItemListResponse!
 
   """
   Fetch single menu item
   """
-  getMenuItem(uid: ID!): MenuItem
+  getMenuItem(uid: ID!): MenuItemResponse!
+
+  getAllMenuItems: MenuItemListResponse!
 }
 
 extend type Mutation {
@@ -55,15 +65,15 @@ extend type Mutation {
   """
   Create menu item
   """
-  saveMenuItem(input: MenuItemInput!): MenuItem!
+  createMenuItem(input: MenuItemInput!): MenuItemListResponse!
 
   """
   Update menu item
   """
-  updateMenuItem(input: MenuItemInput!): MenuItem!
+  updateMenuItem(uid: ID!, input: MenuItemInput!): MenuItemResponse!
 
   """
   Soft delete menu item
   """
-  deleteMenuItem(uid: ID!): Boolean!
+  deleteMenuItem(uid: ID!): Response!
 }

@@ -17,6 +17,6 @@ public class MenuItemDto {
     private Boolean isAvailable;
     private String categoryUid;
     private String restaurantUid;
-    private String isActive;
+    private Boolean isActive;
 
 }
