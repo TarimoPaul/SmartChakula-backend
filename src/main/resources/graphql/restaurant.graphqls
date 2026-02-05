@@ -58,14 +58,14 @@ extend type Query {
   """
   Fetch a single restaurant by its UID
   """
-  restaurantByUid(uid: ID!): RestaurantResponse!
+  getRestaurantByUid(uid: ID!): RestaurantResponse!
 }
 
 extend type Mutation {
   """
   Create a new restaurant
   """
-  createRestaurant(input: RestaurantInput!): RestaurantResponse!
+  saveRestaurant(input: RestaurantInput!): RestaurantResponse!
   
   """
   Update an existing restaurant
