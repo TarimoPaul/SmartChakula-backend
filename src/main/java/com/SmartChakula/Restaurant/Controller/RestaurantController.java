@@ -1,16 +1,17 @@
 package com.SmartChakula.Restaurant.Controller;
 
+import java.util.List;
+
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import com.SmartChakula.Restaurant.Dtos.RestaurantDto;
-import com.SmartChakula.Restaurant.Dtos.RestaurantResponse;
-import com.SmartChakula.Restaurant.Dtos.RestaurantListResponse;
 import com.SmartChakula.Restaurant.Services.RestaurantService;
-import com.SmartChakula.Utils.Response;
-import com.SmartChakula.Utils.ResponseList;
+import com.SmartChakula.Utils.GraphQlResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,60 +23,34 @@ public class RestaurantController {
     private final RestaurantService restaurantService;
 
     @QueryMapping
-    public RestaurantListResponse getAllRestaurants() {
-        log.info("getAllRestaurants query called");
-        ResponseList<RestaurantDto> serviceResponse = restaurantService.getAllRestaurants();
-
-        // Map ResponseList to RestaurantListResponse
-        return new RestaurantListResponse(
-                serviceResponse.getStatus().toString(),
-                serviceResponse.getMessage(),
-                serviceResponse.getData());
+    public GraphQlResponse<List<RestaurantDto>> getAllRestaurants() {
+        return restaurantService.getAllRestaurants();
     }
 
     @QueryMapping
-    public RestaurantResponse restaurantByUid(@Argument String uid) {
-        log.info("restaurantByUid query called with uid: {}", uid);
-        Response<RestaurantDto> serviceResponse = restaurantService.getRestaurantByUid(uid);
-
-        // Map Response to RestaurantResponse
-        return new RestaurantResponse(
-                serviceResponse.getStatus().toString(),
-                serviceResponse.getMessage(),
-                serviceResponse.getData());
+    public GraphQlResponse<RestaurantDto> getRestaurantByUid(@Argument String uid) {
+        return restaurantService.getRestaurantByUid(uid);
     }
 
     @MutationMapping
-    public RestaurantResponse createRestaurant(@Argument RestaurantDto input) {
-        log.info("createRestaurant mutation called with name: {}", input.getName());
-        Response<RestaurantDto> serviceResponse = restaurantService.createRestaurant(input);
-
-        return new RestaurantResponse(
-                serviceResponse.getStatus().toString(),
-                serviceResponse.getMessage(),
-                serviceResponse.getData());
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    public GraphQlResponse<RestaurantDto> saveRestaurant(@Argument RestaurantDto input, Authentication authentication) {
+        return restaurantService.createRestaurant(
+                authentication.getName(),
+                input);
     }
 
     @MutationMapping
-    public RestaurantResponse updateRestaurant(@Argument RestaurantDto input) {
-        log.info("updateRestaurant mutation called");
-        Response<RestaurantDto> serviceResponse = restaurantService.updateRestaurant(input);
-
-        return new RestaurantResponse(
-                serviceResponse.getStatus().toString(),
-                serviceResponse.getMessage(),
-                serviceResponse.getData());
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    public GraphQlResponse<RestaurantDto> updateRestaurant(@Argument RestaurantDto input,
+            Authentication authentication) {
+        return restaurantService.updateRestaurant(authentication.getName(),
+                input);
     }
 
     @MutationMapping
-    public RestaurantResponse deleteRestaurant(@Argument String uid) {
-        log.info("deleteRestaurant mutation called with uid: {}", uid);
-        Response<String> serviceResponse = restaurantService.deleteRestaurant(uid);
-
-        // deleteRestaurant inarudisha String, si data, kwa hiyo data ni null
-        return new RestaurantResponse(
-                serviceResponse.getStatus().toString(),
-                serviceResponse.getMessage(),
-                null);
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    public GraphQlResponse<RestaurantDto> deleteRestaurant(@Argument String uid, Authentication authentication) {
+        return restaurantService.deleteRestaurant(authentication.getName(), uid);
     }
 }

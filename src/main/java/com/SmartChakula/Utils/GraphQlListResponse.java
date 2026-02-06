@@ -1,4 +1,4 @@
-package com.SmartChakula.Restaurant.Dtos;
+package com.SmartChakula.Utils;
 
 import java.util.List;
 
@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RestaurantListResponse {
+public class GraphQlListResponse<T> {
     private String status;
     private String message;
-    private List<RestaurantDto> data;
+    private List<T> data;
 }

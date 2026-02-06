@@ -7,8 +7,11 @@ import com.SmartChakula.MenuItem.Entity.MenuItem;
 import com.SmartChakula.MenuItem.Repository.MenuItemRepo;
 import com.SmartChakula.Restaurant.Entity.RestaurantEntity;
 import com.SmartChakula.Restaurant.Repository.RestaurantRepo;
-import com.SmartChakula.Utils.Response;
-import com.SmartChakula.Utils.ResponseList;
+import com.SmartChakula.Uaa.User.Entity.UserEntity;
+import com.SmartChakula.Uaa.User.Entity.UserRole;
+import com.SmartChakula.Uaa.User.Repository.UserRepo;
+import com.SmartChakula.Utils.GraphQlListResponse;
+import com.SmartChakula.Utils.GraphQlResponse;
 import com.SmartChakula.Utils.ResponseStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,99 +29,175 @@ public class MenuItemService {
     private final MenuItemRepo menuItemRepo;
     private final CategoryRepo categoryRepo;
     private final RestaurantRepo restaurantRepo;
+    private final UserRepo userRepo;
 
-    public ResponseList<MenuItemDto> getMenuItemsByCategory(String categoryUid) {
+    public GraphQlListResponse<MenuItemDto> getMenuItemsByCategory(String categoryUid) {
         try {
+            log.info("Fetching menu items by category: {}", categoryUid);
             List<MenuItem> items = menuItemRepo.findByCategoryUid(categoryUid);
             List<MenuItemDto> dtoList = items.stream().map(this::mapToDto).toList();
-            return ResponseList.success(dtoList, "Menu items fetched successfully");
+            
+            return new GraphQlListResponse<>(
+                ResponseStatus.Success.toString(),
+                "Menu items fetched successfully",
+                dtoList
+            );
         } catch (Exception e) {
             log.error("Error fetching menu items by category: {}", e.getMessage(), e);
-            return ResponseList.error("Failed to fetch menu items: " + e.getMessage());
+            return new GraphQlListResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to fetch menu items: " + e.getMessage(),
+                null
+            );
         }
     }
 
-    public ResponseList<MenuItemDto> getMenuItemsByRestaurant(String restaurantUid) {
+    public GraphQlListResponse<MenuItemDto> getMenuItemsByRestaurant(String restaurantUid) {
         try {
+            log.info("Fetching menu items by restaurant: {}", restaurantUid);
             List<MenuItem> items = menuItemRepo.findByRestaurantUid(restaurantUid);
             List<MenuItemDto> dtoList = items.stream().map(this::mapToDto).toList();
-            return ResponseList.success(dtoList, "Menu items fetched successfully");
+            
+            return new GraphQlListResponse<>(
+                ResponseStatus.Success.toString(),
+                "Menu items fetched successfully",
+                dtoList
+            );
         } catch (Exception e) {
             log.error("Error fetching menu items by restaurant: {}", e.getMessage(), e);
-            return ResponseList.error("Failed to fetch menu items: " + e.getMessage());
+            return new GraphQlListResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to fetch menu items: " + e.getMessage(),
+                null
+            );
         }
     }
 
-    public ResponseList<MenuItemDto> getAllMenuItems() {
+    public GraphQlListResponse<MenuItemDto> getAllMenuItems() {
         try {
+            log.info("Fetching all menu items");
             List<MenuItem> items = menuItemRepo.findAllActive();
             List<MenuItemDto> dtoList = items.stream().map(this::mapToDto).toList();
-            return ResponseList.success(dtoList, "Menu items fetched successfully");
+            
+            return new GraphQlListResponse<>(
+                ResponseStatus.Success.toString(),
+                "Menu items fetched successfully",
+                dtoList
+            );
         } catch (Exception e) {
             log.error("Error fetching all menu items: {}", e.getMessage(), e);
-            return ResponseList.error("Failed to fetch menu items: " + e.getMessage());
+            return new GraphQlListResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to fetch menu items: " + e.getMessage(),
+                null
+            );
         }
     }
 
-    public Response<MenuItemDto> getMenuItem(String uid) {
+    public GraphQlResponse<MenuItemDto> getMenuItem(String uid) {
         try {
+            log.info("Fetching menu item with uid: {}", uid);
+            
             if (uid == null || uid.isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "UID is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "UID is required",
+                    null
+                );
             }
 
-            MenuItem menuItem = menuItemRepo.findByUid(uid)
-                    .orElse(null);
+            MenuItem menuItem = menuItemRepo.findByUid(uid).orElse(null);
 
             if (menuItem == null) {
-                return new Response<>(ResponseStatus.Error, null, "Menu item not found");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Menu item not found",
+                    null
+                );
             }
 
-            return new Response<>(ResponseStatus.Success, mapToDto(menuItem), "Menu item fetched successfully");
+            return new GraphQlResponse<>(
+                ResponseStatus.Success.toString(),
+                "Menu item fetched successfully",
+                mapToDto(menuItem)
+            );
         } catch (Exception e) {
             log.error("Error fetching menu item: {}", e.getMessage(), e);
-            return new Response<>(ResponseStatus.Error, null, "Failed to fetch menu item: " + e.getMessage());
+            return new GraphQlResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to fetch menu item: " + e.getMessage(),
+                null
+            );
         }
     }
 
     @Transactional
-    public Response<MenuItemDto> saveMenuItem(MenuItemDto input) {
-        log.info("saveMenuItem called with input: {}", input);
+    public GraphQlResponse<MenuItemDto> saveMenuItem(String email, MenuItemDto input) {
 
         try {
+
             if (input == null) {
                 log.error("Input is null");
-                return new Response<>(ResponseStatus.Error, null, "Input is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Input is required",
+                    null
+                );
+            }
+
+            UserEntity user = userRepo.findByEmail(email).orElse(null);
+            if (user == null)
+                return new GraphQlResponse<>(ResponseStatus.Error.toString(), "user not found", null);        
+            
+
+            CategoryEntity category = categoryRepo.findByUid(input.getCategoryUid()).orElse(null);
+            if (category == null)
+                return new GraphQlResponse<>(ResponseStatus.Error.toString(), "category not found", null);
+
+
+            RestaurantEntity restaurant = category.getRestaurant();
+
+            if (!restaurant.getOwner().getUid().equals(user.getUid())
+                && user.getRole() != UserRole.ADMIN) {
+
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Unauthorized: You do not own the restaurant for this category",
+                    null
+                );
             }
 
             // Validate required fields
             if (input.getName() == null || input.getName().isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "Name is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Name is required",
+                    null
+                );
             }
 
             if (input.getCategoryUid() == null || input.getCategoryUid().isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "Category UID is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Category UID is required",
+                    null
+                );
             }
 
             if (input.getRestaurantUid() == null || input.getRestaurantUid().isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "Restaurant UID is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Restaurant UID is required",
+                    null
+                );
             }
 
             if (input.getPrice() == null || input.getPrice() <= 0) {
-                return new Response<>(ResponseStatus.Error, null, "Valid price is required");
-            }
-
-            // Fetch category
-            CategoryEntity category = categoryRepo.findByUid(input.getCategoryUid())
-                    .orElse(null);
-            if (category == null) {
-                return new Response<>(ResponseStatus.Error, null, "Category not found with UID: " + input.getCategoryUid());
-            }
-
-            // Fetch restaurant
-            RestaurantEntity restaurant = restaurantRepo.findByUid(input.getRestaurantUid())
-                    .orElse(null);
-            if (restaurant == null) {
-                return new Response<>(ResponseStatus.Error, null, "Restaurant not found with UID: " + input.getRestaurantUid());
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Valid price is required",
+                    null
+                );
             }
 
             // Generate UID
@@ -130,6 +209,20 @@ public class MenuItemService {
             String description = input.getDescription() != null ? input.getDescription().trim() : null;
             String image = input.getImage();
             boolean available = input.getAvailable() != null ? input.getAvailable() : true;
+
+            String warning = "";
+
+            // Validate and truncate description if needed
+            if (description != null && description.length() > 255) {
+                description = description.substring(0, 255);
+                warning = "Description truncated to 255 characters. ";
+            }
+
+            // Validate image URL length
+            if (image != null && image.length() > 2555) {
+                image = null;
+                warning += "Image URL too long, removed. ";
+            }
 
             // Insert menu item
             log.info("Inserting menu item with UID: {}", uid);
@@ -145,7 +238,11 @@ public class MenuItemService {
 
             if (rowsInserted == 0) {
                 log.error("Failed to insert menu item into database");
-                return new Response<>(ResponseStatus.Error, null, "Failed to save menu item to database");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Failed to save menu item to database",
+                    null
+                );
             }
 
             // Fetch the saved menu item
@@ -156,46 +253,112 @@ public class MenuItemService {
             // Map to DTO
             MenuItemDto resultDto = mapToDto(savedMenuItem);
 
-            return new Response<>(ResponseStatus.Success, resultDto, "Menu item saved successfully");
+            // Prepare response message
+            String message = warning.isEmpty()
+                    ? "Menu item saved successfully"
+                    : "Menu item saved successfully. " + warning.trim();
+
+            return new GraphQlResponse<>(
+                ResponseStatus.Success.toString(),
+                message,
+                resultDto
+            );
 
         } catch (Exception e) {
             log.error("Error in saveMenuItem: {}", e.getMessage(), e);
-            return new Response<>(ResponseStatus.Error, null, "Failed to save menu item: " + e.getMessage());
+            return new GraphQlResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to save menu item: " + e.getMessage(),
+                null
+            );
         }
     }
 
     @Transactional
-    public Response<MenuItemDto> updateMenuItem(String uid, MenuItemDto input) {
+    public GraphQlResponse<MenuItemDto> updateMenuItem(String email, String uid, MenuItemDto input) {
         try {
+            log.info("Updating menu item with uid: {}", uid);
+            
             if (uid == null || uid.isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "UID is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "UID is required",
+                    null
+                );
             }
 
             if (input == null) {
-                return new Response<>(ResponseStatus.Error, null, "Input is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Input is required",
+                    null
+                );
             }
 
             // Validate required fields
             if (input.getName() == null || input.getName().isBlank()) {
-                return new Response<>(ResponseStatus.Error, null, "Name is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Name is required",
+                    null
+                );
             }
 
             if (input.getPrice() == null || input.getPrice() <= 0) {
-                return new Response<>(ResponseStatus.Error, null, "Valid price is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Valid price is required",
+                    null
+                );
             }
+
+
+            UserEntity user = userRepo.findByEmail(email).orElse(null);
+            if (user == null)
+                return new GraphQlResponse<>(ResponseStatus.Error.toString(), "user not found", null);
+
 
             // Check if menu item exists
-            MenuItem existingItem = menuItemRepo.findByUid(uid)
-                    .orElse(null);
+            MenuItem existingItem = menuItemRepo.findByUid(uid).orElse(null);
             if (existingItem == null) {
-                return new Response<>(ResponseStatus.Error, null, "Menu item not found");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Menu item not found",
+                    null
+                );
             }
 
+            RestaurantEntity restaurant = existingItem.getCategory().getRestaurant();
+
+            if (!restaurant.getOwner().getUid().equals(user.getUid())
+                && user.getRole() != UserRole.ADMIN) {
+
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Unauthorized: You do not own the restaurant for this menu item",
+                    null
+                );
+                
+            }
             // Prepare data
             String name = input.getName().trim();
             String description = input.getDescription() != null ? input.getDescription().trim() : null;
             String image = input.getImage();
             boolean available = input.getAvailable() != null ? input.getAvailable() : existingItem.isAvailable();
+
+            String warning = "";
+
+            // Validate and truncate description if needed
+            if (description != null && description.length() > 255) {
+                description = description.substring(0, 255);
+                warning = "Description truncated to 255 characters. ";
+            }
+
+            // Validate image URL length
+            if (image != null && image.length() > 2555) {
+                image = null;
+                warning += "Image URL too long, removed. ";
+            }
 
             // Update menu item
             int rowsUpdated = menuItemRepo.updateMenuItem(
@@ -207,47 +370,88 @@ public class MenuItemService {
                     available);
 
             if (rowsUpdated == 0) {
-                return new Response<>(ResponseStatus.Failure, null, "Failed to update menu item");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Failed to update menu item",
+                    null
+                );
             }
 
             // Fetch updated menu item
             MenuItem updatedMenuItem = menuItemRepo.findByUid(uid)
                     .orElseThrow(() -> new RuntimeException("Menu item not found after update"));
 
-            return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), "Menu item updated successfully");
+            // Prepare response message
+            String message = warning.isEmpty()
+                    ? "Menu item updated successfully"
+                    : "Menu item updated successfully. " + warning.trim();
+
+            return new GraphQlResponse<>(
+                ResponseStatus.Success.toString(),
+                message,
+                mapToDto(updatedMenuItem)
+            );
 
         } catch (Exception e) {
             log.error("Error in updateMenuItem: {}", e.getMessage(), e);
-            return new Response<>(ResponseStatus.Error, null, "Failed to update menu item: " + e.getMessage());
+            return new GraphQlResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to update menu item: " + e.getMessage(),
+                null
+            );
         }
     }
 
     @Transactional
-    public Response<String> deleteMenuItem(String uid) {
+    public GraphQlResponse<MenuItemDto> deleteMenuItem(String email, String uid) {
         try {
+            log.info("Deleting menu item with uid: {}", uid);
+            
             if (uid == null || uid.isBlank()) {
-                return new Response<>("UID is required");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "UID is required",
+                    null
+                );
             }
+
+            UserEntity user = userRepo.findByEmail(email).orElse(null);
+            if (user == null)
+                return new GraphQlResponse<>(ResponseStatus.Error.toString(), "user not found", null);
 
             // Check if menu item exists
-            MenuItem existingItem = menuItemRepo.findByUid(uid)
-                    .orElse(null);
+            MenuItem existingItem = menuItemRepo.findByUid(uid).orElse(null);
             if (existingItem == null) {
-                return new Response<>("Menu item not found");
+                return new GraphQlResponse<>(
+                    ResponseStatus.Error.toString(),
+                    "Menu item not found",
+                    null
+                );
             }
 
-            // Soft delete
-            int rowsDeleted = menuItemRepo.softDeleteMenuItem(uid);
-
-            if (rowsDeleted == 0) {
-                return new Response<>("Failed to delete menu item");
+            if (!existingItem.getRestaurant().getOwner().getUid().equals(user.getUid())
+                && user.getRole() != UserRole.ADMIN) {
+                return new GraphQlResponse<>(ResponseStatus.Error.toString(),
+                    "Unauthorized: You do not own the restaurant for this menu item",
+                    null
+                );
             }
 
-            return new Response<>( "Menu item deleted successfully");
+           menuItemRepo.softDeleteMenuItem(uid);
+           return new GraphQlResponse<>(
+                ResponseStatus.Success.toString(),
+                "Menu item deleted successfully",
+                null
+            );
+
 
         } catch (Exception e) {
             log.error("Error in deleteMenuItem: {}", e.getMessage(), e);
-            return new Response<>("Failed to delete menu item: " + e.getMessage());
+            return new GraphQlResponse<>(
+                ResponseStatus.Error.toString(),
+                "Failed to delete menu item: " + e.getMessage(),
+                null
+            );
         }
     }
 

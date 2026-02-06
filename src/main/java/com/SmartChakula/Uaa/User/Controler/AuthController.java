@@ -2,12 +2,18 @@ package com.SmartChakula.Uaa.User.Controler;
 
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import com.SmartChakula.Uaa.User.Dtos.AuthResponse;
 import com.SmartChakula.Uaa.User.Dtos.LoginInput;
 import com.SmartChakula.Uaa.User.Dtos.RegisterInput;
+import com.SmartChakula.Uaa.User.Dtos.SaveOwnerInput;
+import com.SmartChakula.Uaa.User.Dtos.SaveManagerInput;
+import com.SmartChakula.Uaa.User.Entity.UserEntity;
 import com.SmartChakula.Uaa.User.Services.AuthService;
+import com.SmartChakula.Utils.GraphQlResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,50 +26,49 @@ public class AuthController {
     private final AuthService authService;
 
     @MutationMapping
-    public AuthResponse login(@Argument LoginInput input) {
-        log.info("🔴 login MUTATION CALLED with identifier: {}", input.getIdentifier());
-        
-        try {
-            // Call service with explicit getter methods
-            AuthResponse response = authService.login(
-                input.getIdentifier(), 
-                input.getPassword()
-            );
-            
-            log.info("🔴 login successful, token generated");
-            return response;
-            
-        } catch (Exception e) {
-            log.error("🔴 login error: {}", e.getMessage(), e);
-            throw new RuntimeException("Login failed: " + e.getMessage(), e);
-        }
+    public GraphQlResponse<AuthResponse> login(@Argument LoginInput input) {
+        log.info("login MUTATION CALLED with identifier: {}", input.getIdentifier());
+        return authService.login(input.getIdentifier(), input.getPassword());
     }
 
     @MutationMapping
-    public AuthResponse register(@Argument RegisterInput input) {
-        log.info("🔴 register MUTATION CALLED");
-        log.info("🔴 Register input - fullName: {}, email: {}, role: {}", 
-            input.getFullName(), 
-            input.getEmail(), 
-            input.getRole());
-        
-        try {
-            // Call service with explicit getter methods
-            AuthResponse response = authService.register(
+    public GraphQlResponse<AuthResponse> register(@Argument RegisterInput input) {
+        log.info("register MUTATION CALLED for email: {}", input.getEmail());
+        return authService.registerUser(
                 input.getFullName(),
                 input.getEmail(),
                 input.getPassword(),
                 input.getPhone(),
-                input.getRole()
-            );
-            
-            log.info("🔴 register successful, user created with uid: {}", 
-                response.getUser().getUid());
-            return response;
-            
-        } catch (Exception e) {
-            log.error("🔴 register error: {}", e.getMessage(), e);
-            throw new RuntimeException("Registration failed: " + e.getMessage(), e);
-        }
+                input.getRole());
     }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public GraphQlResponse<AuthResponse> saveOwner(@Argument("input") SaveOwnerInput input) {
+        log.info("saveOwner MUTATION CALLED for email: {}", input.getEmail());
+        return authService.saveOwner(
+                input.getFullName(),
+                input.getEmail(),
+                input.getPassword(),
+                input.getPhone()
+
+        );
+    }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('OWNER')")
+    public GraphQlResponse<UserEntity> saveManager(@Argument("input") SaveManagerInput input,
+            Authentication authentication) {
+        String ownerEmail = authentication.getName();
+        log.info("saveManager MUTATION CALLED for email: {}", input.getEmail());
+
+        return authService.saveManager(
+                input.getFullName(),
+                input.getEmail(),
+                input.getPassword(),
+                input.getPhone(),
+                ownerEmail,
+                input.getRestaurantUids());
+    }
+
 }

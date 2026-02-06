@@ -1,4 +1,14 @@
 """
+Generic GraphQL response wrapper
+"""
+type GraphQlResponseAuthResponse {
+  status: String!
+  message: String
+  data: AuthResponse
+  errors: [String!]
+}
+
+"""
 User DTO for responses
 """
 type UserDto {
@@ -40,6 +50,21 @@ input RegisterInput {
   role: UserRole!
 }
 
+input SaveOwnerInput {
+  fullName: String!
+  email: String!
+  password: String!
+  phone: String
+}
+
+input SaveManagerInput {
+  fullName: String!
+  email: String!
+  password: String!
+  phone: String
+  restaurantUids: [ID!]!
+}
+
 extend type Mutation {
   """
   User login
@@ -50,4 +75,8 @@ extend type Mutation {
   User registration
   """
   register(input: RegisterInput!): AuthResponse!
+
+  saveOwner(input: SaveOwnerInput!): GraphQlResponseAuthResponse!
+
+  saveManager(input: SaveManagerInput!): GraphQlResponseAuthResponse!
 }
