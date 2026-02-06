@@ -32,6 +32,9 @@ public class SecurityConfig {
                         // ✅ Allow CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // 🔓 Public read-only REST endpoints (customer-facing)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+
                         // 🔓 Public endpoints
                         .requestMatchers(
                                 "/graphql",
@@ -63,7 +66,7 @@ public class SecurityConfig {
                 "http://127.0.0.1:*",
                  "electron://*"
         ));
-        config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowCredentials(true);
 

@@ -131,20 +131,6 @@ public class MenuItemService {
             String image = input.getImage();
             boolean available = input.getAvailable() != null ? input.getAvailable() : true;
 
-            String warning = "";
-
-            // Validate and truncate description if needed
-            if (description != null && description.length() > 255) {
-                description = description.substring(0, 255);
-                warning = "Description truncated to 255 characters. ";
-            }
-
-            // Validate image URL length
-            if (image != null && image.length() > 2555) {
-                image = null;
-                warning += "Image URL too long, removed. ";
-            }
-
             // Insert menu item
             log.info("Inserting menu item with UID: {}", uid);
             int rowsInserted = menuItemRepo.insertMenuItem(
@@ -170,12 +156,7 @@ public class MenuItemService {
             // Map to DTO
             MenuItemDto resultDto = mapToDto(savedMenuItem);
 
-            // Prepare response message
-            String message = warning.isEmpty()
-                    ? "Menu item saved successfully"
-                    : "Menu item saved successfully. " + warning.trim();
-
-            return new Response<>(ResponseStatus.Success, resultDto, message);
+            return new Response<>(ResponseStatus.Success, resultDto, "Menu item saved successfully");
 
         } catch (Exception e) {
             log.error("Error in saveMenuItem: {}", e.getMessage(), e);
@@ -216,20 +197,6 @@ public class MenuItemService {
             String image = input.getImage();
             boolean available = input.getAvailable() != null ? input.getAvailable() : existingItem.isAvailable();
 
-            String warning = "";
-
-            // Validate and truncate description if needed
-            if (description != null && description.length() > 255) {
-                description = description.substring(0, 255);
-                warning = "Description truncated to 255 characters. ";
-            }
-
-            // Validate image URL length
-            if (image != null && image.length() > 2555) {
-                image = null;
-                warning += "Image URL too long, removed. ";
-            }
-
             // Update menu item
             int rowsUpdated = menuItemRepo.updateMenuItem(
                     uid,
@@ -247,12 +214,7 @@ public class MenuItemService {
             MenuItem updatedMenuItem = menuItemRepo.findByUid(uid)
                     .orElseThrow(() -> new RuntimeException("Menu item not found after update"));
 
-            // Prepare response message
-            String message = warning.isEmpty()
-                    ? "Menu item updated successfully"
-                    : "Menu item updated successfully. " + warning.trim();
-
-            return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), message);
+            return new Response<>(ResponseStatus.Success, mapToDto(updatedMenuItem), "Menu item updated successfully");
 
         } catch (Exception e) {
             log.error("Error in updateMenuItem: {}", e.getMessage(), e);

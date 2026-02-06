@@ -26,9 +26,19 @@ public class AuthService {
         log.info("Login attempt for identifier: {}", identifier);
 
         UserEntity user = userRepo.findByIdentifier(identifier)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        final String stored = user.getPassword();
+        boolean ok = stored != null && passwordEncoder.matches(password, stored);
+
+        if (!ok && stored != null && stored.equals(password)) {
+            log.warn("User {} has a legacy plain-text password. Migrating to BCrypt.", user.getUid());
+            user.setPassword(passwordEncoder.encode(password));
+            userRepo.save(user);
+            ok = true;
+        }
+
+        if (!ok) {
             throw new RuntimeException("Invalid credentials");
         }
 

@@ -15,3 +15,12 @@ type User {
     isActive: Boolean!
     createdAt: String!
 }
+
+extend type Query {
+    getAllUsers: [UserDto!]!
+}
+
+extend type Mutation {
+    updateUserRole(uid: ID!, role: UserRole!): UserDto!
+    changeUserPassword(uid: ID!, newPassword: String!): UserDto!
+}
